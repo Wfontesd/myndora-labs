@@ -1,0 +1,113 @@
+      </div>
+
+      <div class="project-card__footer">
+        <button
+          class="support-button"
+          :class="{ 'is-active': hasVoted }"
+          type="button"
+          :aria-pressed="hasVoted"
+          @click.stop="pulseVote"
+        >
+          <app-icon name="heart"></app-icon>
+          <span>{{ project.votes.length }}</span>
+          <span class="support-button__label">{{ hasVoted ? 'Soutenu' : 'Soutenir' }}</span>
+          <i v-for="n in 6" :key="n" :style="{ '--i': n }"></i>
+        </button>
+        <span class="roles-need" v-if="project.roleNeeds.length">
+          <app-icon name="users"></app-icon>
+          {{ project.roleNeeds.length }} rôle{{ project.roleNeeds.length > 1 ? 's' : '' }} recherché{{ project.roleNeeds.length > 1 ? 's' : '' }}
+        </span>
+        <span class="project-card__arrow"><app-icon name="arrow-up-right"></app-icon></span>
+      </div>
+    </article>
+  </template>
+
+  <template id="app-template">
+    <div class="app-shell" :class="{ 'app-shell--modal-open': anyModalOpen }">
+      <div class="ambient ambient--one" aria-hidden="true"></div>
+      <div class="ambient ambient--two" aria-hidden="true"></div>
+      <div class="ambient ambient--three" aria-hidden="true"></div>
+      <div class="noise" aria-hidden="true"></div>
+      <div class="cursor-aura" :style="cursorStyle" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <button class="brand" type="button" @click="goTo('board')" aria-label="Revenir à l’accueil">
+          <span class="brand__company">bloomind<span>.</span></span>
+          <span class="brand__separator"></span>
+          <brand-mark small></brand-mark>
+          <span class="brand__product">Bloom’innov</span>
+          <span class="brand__beta">internal</span>
+        </button>
+
+        <nav class="desktop-nav" aria-label="Navigation principale">
+          <button :class="{ 'is-active': currentView === 'board' }" @click="goTo('board')">Explorer</button>
+          <button :class="{ 'is-active': currentView === 'mine' }" @click="goTo('mine')">Mon espace</button>
+          <button :class="{ 'is-active': currentView === 'activity' }" @click="goTo('activity')">Activité</button>
+        </nav>
+
+        <div class="topbar__actions">
+          <button class="icon-button icon-button--soft desktop-only" type="button" @click="openOnboarding(true)" aria-label="Revoir la présentation">
+            <app-icon name="sparkles"></app-icon>
+          </button>
+          <button class="primary-button primary-button--compact" type="button" @click="openCreate">
+            <app-icon name="plus"></app-icon><span>Proposer une idée</span>
+          </button>
+          <div class="profile-switcher">
+            <button class="profile-button" type="button" @click="userMenuOpen = !userMenuOpen" :aria-expanded="userMenuOpen">
+              <span class="avatar" :style="avatarStyle(currentUser)">{{ initials(currentUser.name) }}</span>
+              <span class="profile-button__copy desktop-only"><strong>{{ currentUser.name }}</strong><small>{{ roleLabel(currentUser) }}</small></span>
+              <app-icon name="chevron-down" class-name="desktop-only"></app-icon>
+            </button>
+            <transition name="popover">
+              <div v-if="userMenuOpen" class="user-menu surface-popover" @click.stop>
+                <div class="user-menu__header"><span>Profil de démonstration</span><small>Change pour tester les droits</small></div>
+                <button v-for="user in users" :key="user.id" type="button" :class="{ 'is-active': user.id === currentUserId }" @click="switchUser(user.id)">
+                  <span class="avatar avatar--sm" :style="avatarStyle(user)">{{ initials(user.name) }}</span>
+                  <span><strong>{{ user.name }}</strong><small>{{ roleLabel(user) }}</small></span>
+                  <app-icon v-if="user.id === currentUserId" name="check"></app-icon>
+                </button>
+                <div class="user-menu__divider"></div>
+                <button type="button" @click="openOnboarding(true)"><app-icon name="play"></app-icon><span><strong>Revoir l’onboarding</strong><small>2 minutes</small></span></button>
+                <button type="button" @click="resetDemo"><app-icon name="rotate"></app-icon><span><strong>Réinitialiser la démo</strong><small>Restaurer les données</small></span></button>
+              </div>
+            </transition>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <transition name="page" mode="out-in">
+          <section v-if="currentView === 'board'" key="board" class="page page--board">
+            <section class="hero-section">
+              <div class="hero-section__copy">
+                <div class="hero-kicker reveal"><span class="live-dot"></span> Le laboratoire d’idées de Bloomind</div>
+                <h1 class="hero-title reveal">
+                  Les idées qui font<br />
+                  <span class="hero-title__accent">avancer</span>
+                  <span class="hero-title__rotator" :class="`hero-title__rotator--${rotatingWordIndex}`">{{ rotatingWords[rotatingWordIndex] }}</span>
+                </h1>
+                <p class="hero-lead reveal">Partage une intuition, trouve des alliés et transforme une bonne idée en projet qui compte vraiment.</p>
+                <div class="hero-actions reveal">
+                  <button class="primary-button primary-button--large magnetic" type="button" @click="openCreate">
+                    <span>Faire éclore une idée</span><app-icon name="arrow-up-right"></app-icon>
+                  </button>
+                  <button class="text-button" type="button" @click="scrollToProjects"><span>Découvrir les projets</span><app-icon name="arrow-down"></app-icon></button>
+                </div>
+              </div>
+
+              <div class="hero-orbit reveal" aria-hidden="true">
+                <div class="hero-orbit__ring hero-orbit__ring--one"></div>
+                <div class="hero-orbit__ring hero-orbit__ring--two"></div>
+                <div class="hero-orbit__center">
+                  <brand-mark></brand-mark>
+                  <span>IDEAS<br />IN MOTION</span>
+                </div>
+                <div class="hero-orbit__card hero-orbit__card--one"><app-icon name="heart"></app-icon><strong>+18</strong><small>soutiens aujourd’hui</small></div>
+                <div class="hero-orbit__card hero-orbit__card--two"><span class="avatar avatar--xs" :style="avatarStyle(users[1])">{{ initials(users[1].name) }}</span><span class="avatar avatar--xs" :style="avatarStyle(users[2])">{{ initials(users[2].name) }}</span><strong>Une équipe se forme</strong></div>
+                <div class="hero-orbit__spark hero-orbit__spark--one"></div>
+                <div class="hero-orbit__spark hero-orbit__spark--two"></div>
+              </div>
+            </section>
+
+            <div class="brand-marquee" aria-hidden="true">
+              <div><span>IDEAS</span><i></i><span>PEOPLE</span><i></i><span>IMPACT</spa

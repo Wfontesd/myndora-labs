@@ -1,0 +1,86 @@
+n><i></i><span>TOGETHER</span><i></i><span>IDEAS</span><i></i><span>PEOPLE</span><i></i><span>IMPACT</span><i></i><span>TOGETHER</span><i></i></div>
+            </div>
+
+            <section class="pulse-strip reveal">
+              <article><span class="pulse-strip__icon pulse-strip__icon--primary"><app-icon name="bulb"></app-icon></span><div><strong>{{ animatedStats.projects }}</strong><small>idées partagées</small></div><em>+3 cette semaine</em></article>
+              <article><span class="pulse-strip__icon pulse-strip__icon--secondary"><app-icon name="heart"></app-icon></span><div><strong>{{ animatedStats.votes }}</strong><small>soutiens exprimés</small></div><em>La communauté pulse</em></article>
+              <article><span class="pulse-strip__icon pulse-strip__icon--tertiary"><app-icon name="users"></app-icon></span><div><strong>{{ animatedStats.members }}</strong><small>contributeurs engagés</small></div><em>{{ openRolesCount }} rôles ouverts</em></article>
+            </section>
+
+            <section ref="projectsSection" class="projects-section">
+              <div class="section-heading reveal">
+                <div><span class="section-kicker">À découvrir maintenant</span><h2>Les idées en mouvement</h2></div>
+                <p>{{ filteredProjects.length }} projet{{ filteredProjects.length > 1 ? 's' : '' }} à explorer</p>
+              </div>
+
+              <div class="filter-panel reveal">
+                <label class="search-field">
+                  <app-icon name="search"></app-icon>
+                  <input v-model.trim="search" type="search" placeholder="Rechercher une idée, un sujet, une personne…" />
+                  <kbd class="desktop-only">⌘ K</kbd>
+                </label>
+                <div class="filter-chips" role="group" aria-label="Filtrer par statut">
+                  <button v-for="filter in statusFilters" :key="filter.value" type="button" :class="{ 'is-active': statusFilter === filter.value }" @click="statusFilter = filter.value">
+                    <span v-if="filter.value !== 'ALL'" class="status-dot" :class="`status-dot--${filter.value.toLowerCase()}`"></span>{{ filter.label }}<b>{{ filterCount(filter.value) }}</b>
+                  </button>
+                </div>
+                <label class="select-field"><span>Trier</span><select v-model="sortBy"><option value="trending">Tendances</option><option value="recent">Plus récentes</option><option value="votes">Plus soutenues</option></select><app-icon name="chevron-down"></app-icon></label>
+              </div>
+
+              <transition-group name="grid" tag="div" class="project-grid">
+                <project-card
+                  v-for="(project, index) in filteredProjects"
+                  :key="project.id"
+                  :project="project"
+                  :index="index"
+                  :users="users"
+                  :current-user="currentUser"
+                  @open="openProject"
+                  @vote="toggleVote"
+                ></project-card>
+              </transition-group>
+
+              <div v-if="filteredProjects.length === 0" class="empty-state reveal">
+                <div class="empty-state__visual"><brand-mark></brand-mark></div>
+                <h3>Aucune idée ne correspond encore</h3>
+                <p>Modifie tes filtres ou sois la première personne à proposer quelque chose sur ce sujet.</p>
+                <button class="primary-button" @click="openCreate"><app-icon name="plus"></app-icon>Proposer une idée</button>
+              </div>
+            </section>
+
+            <section class="closing-banner reveal">
+              <div><span class="section-kicker">Une intuition en tête ?</span><h2>Le prochain projet utile peut commencer par deux phrases.</h2><p>Pas de dossier de 20 pages. Un nom, une idée, un statut — le reste grandira avec l’équipe.</p></div>
+              <button class="light-button magnetic" type="button" @click="openCreate"><span>Partager maintenant</span><app-icon name="arrow-up-right"></app-icon></button>
+              <div class="closing-banner__flower" aria-hidden="true"><brand-mark></brand-mark></div>
+            </section>
+          </section>
+
+          <section v-else-if="currentView === 'mine'" key="mine" class="page page--inner">
+            <div class="inner-hero reveal"><span class="section-kicker">Mon espace</span><h1>Tout ce que tu fais grandir.</h1><p>Retrouve tes idées, tes soutiens et les projets auxquels tu contribues.</p></div>
+            <div class="workspace-tabs reveal">
+              <button v-for="tab in mineTabs" :key="tab.value" :class="{ 'is-active': mineTab === tab.value }" @click="mineTab = tab.value">{{ tab.label }}<b>{{ mineCount(tab.value) }}</b></button>
+            </div>
+            <transition-group name="grid" tag="div" class="project-grid project-grid--inner">
+              <project-card v-for="(project, index) in myFilteredProjects" :key="project.id" :project="project" :index="index" :users="users" :current-user="currentUser" @open="openProject" @vote="toggleVote"></project-card>
+            </transition-group>
+            <div v-if="myFilteredProjects.length === 0" class="empty-state"><div class="empty-state__visual"><app-icon name="leaf"></app-icon></div><h3>Rien ici pour le moment</h3><p>Explore les idées ou propose le premier projet de cette catégorie.</p><button class="primary-button" @click="goTo('board')">Explorer les idées</button></div>
+          </section>
+
+          <section v-else key="activity" class="page page--inner">
+            <div class="inner-hero reveal"><span class="section-kicker">Le pouls collectif</span><h1>Ça bouge chez Bloomind.</h1><p>Les derniers soutiens, nouvelles équipes et idées qui viennent d’éclore.</p></div>
+            <div class="activity-layout">
+              <div class="activity-feed reveal">
+                <article v-for="event in activityEvents" :key="event.id" class="activity-item">
+                  <span class="activity-item__icon" :class="`activity-item__icon--${event.type}`"><app-icon :name="activityIcon(event.type)"></app-icon></span>
+                  <div><p v-html="event.text"></p><small>{{ event.time }}</small></div>
+                  <button v-if="event.projectId" @click="openProject(projectById(event.projectId))"><app-icon name="arrow-up-right"></app-icon></button>
+                </article>
+              </div>
+              <aside class="activity-aside reveal"><span class="section-kicker">Cette semaine</span><h3>Une énergie visible.</h3><div class="activity-ring"><strong>74%</strong><span>des idées ont reçu<br />au moins un soutien</span></div><ul><li><span></span>3 nouvelles idées</li><li><span></span>8 mises en relation</li><li><span></span>2 projets lancés</li></ul></aside>
+            </div>
+          </section>
+        </transition>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Navigation mobile">
+        <button :class="{ 'is-active': currentView === 'board' }" @click="goTo('board')"><app-icon name="grid"></app-icon><

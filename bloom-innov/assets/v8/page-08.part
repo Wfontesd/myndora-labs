@@ -1,0 +1,77 @@
+)}.hero-lead{font-size:17px}.hero-actions{align-items:flex-start;flex-direction:column;gap:12px}.brand-marquee{margin-top:25px}.pulse-strip{grid-template-columns:1fr;margin:65px 0 85px}.pulse-strip article{min-height:110px;border-right:0;border-bottom:1px solid var(--line)}.pulse-strip article:last-child{border-bottom:0}.section-heading{align-items:flex-start;flex-direction:column}.filter-panel{position:relative;top:auto;grid-template-columns:1fr}.filter-chips{grid-column:auto}.select-field{border-left:0;border-top:1px solid var(--line);padding-top:10px}.project-grid{grid-template-columns:1fr}.project-card,.project-card:nth-child(n){grid-column:1!important;min-height:400px}.closing-banner{grid-template-columns:1fr;border-radius:28px;padding:35px 24px}.closing-banner__flower{opacity:.22}.page--inner{padding-block:60px 110px}.inner-hero h1{font-size:clamp(52px,14vw,82px)}.activity-layout{grid-template-columns:1fr}.activity-aside{position:relative;top:auto}.mobile-nav{position:fixed;z-index:80;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));height:64px;padding:5px 9px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:22px;color:white;background:rgba(20,20,20,.92);backdrop-filter:blur(18px);box-shadow:0 16px 45px rgba(0,0,0,.25)}.mobile-nav button{border:0;display:grid;place-items:center;gap:3px;color:rgba(255,255,255,.55);background:none;font-size:8px}.mobile-nav button.is-active{color:white}.mobile-nav .icon{width:18px;height:18px}.mobile-nav__create{width:50px;height:50px;margin:-18px auto 0;border-radius:50%!important;color:var(--ink)!important;background:var(--tertiary)!important;box-shadow:0 0 0 5px var(--ink),0 8px 20px rgba(0,0,0,.3)}.project-drawer{border-radius:23px}.project-drawer__content{grid-template-columns:1fr}.detail-bento,.detail-bento--wide{grid-column:1}.role-grid{grid-template-columns:1fr}.project-drawer__actions{overflow-x:auto}.project-drawer__actions .primary-button{white-space:nowrap}.join-modal{grid-template-columns:1fr}.join-modal__visual{display:none}.status-choice>div{grid-template-columns:1fr 1fr}.optional-fields{grid-template-columns:1fr}.form-modal__footer{align-items:stretch;flex-direction:column-reverse}.form-modal__footer .primary-button{width:100%}.onboarding-step{grid-template-columns:1fr;padding:95px 24px 105px;overflow:auto}.onboarding-step__copy h1{font-size:clamp(48px,14vw,75px)}.onboarding-step__visual{width:min(80vw,430px);margin-top:24px}.onboarding__brand{left:20px;top:21px}.onboarding__skip{right:17px;top:19px}.onboarding__footer{left:20px;right:20px;bottom:15px}.onboarding__progress button{width:26px}.onboarding-network__person{transform:translate(-50%,-50%) rotate(var(--angle)) translateY(-155px) rotate(calc(var(--angle)*-1))}.onboarding-network__person .avatar{width:48px;height:48px}.onboarding-users{grid-template-columns:1fr}.toast-stack{bottom:90px}
+}
+@media (max-width:520px){
+  .hero-orbit__card--one{right:-2%}.hero-orbit__card--two{left:-3%}.hero-orbit__card{padding:9px 10px}.hero-orbit__card small{display:none}.hero-orbit__card--two strong{max-width:85px}.project-card{padding:20px;border-radius:23px}.project-card h3{font-size:31px}.roles-need{display:none}.form-modal,.confirm-modal{padding:26px 19px;border-radius:23px}.modal-layer{padding:10px}.status-choice label{min-height:90px}.drawer-layer{padding:0}.project-drawer{border-radius:0}.project-drawer__hero{min-height:430px;padding-inline:23px}.project-drawer__hero h2{font-size:50px}.project-drawer__content{padding-inline:16px}.detail-section__heading{align-items:flex-start;flex-direction:column}.open-contribution{align-items:flex-start;flex-wrap:wrap}.open-contribution .secondary-button{width:100%}.onboarding-step__visual{width:90vw}.onboarding-ready__word{font-size:63px}
+}
+@media (hover:none){.cursor-aura{display:none}.project-card:hover{transform:none}.magnetic{transform:none!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}.reveal{opacity:1;transform:none}.cursor-aura{display:none}}
+
+  </style>
+</head>
+<body>
+  <script>
+    // Compatibilité avec l’ancienne URL Vue Router (#/projects).
+    if (window.location.hash.startsWith("#/")) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  </script>
+
+  <div id="app">
+    <div class="app-boot" role="status" aria-live="polite">
+      <div class="app-boot__flower" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
+      <strong>Bloom’innov</strong>
+      <span>Les idées commencent à éclore…</span>
+    </div>
+  </div>
+
+  <template id="icon-template">
+    <svg class="icon" :class="className" aria-hidden="true"><use :href="'#icon-' + name"></use></svg>
+  </template>
+
+  <template id="brand-mark-template">
+    <span class="brand-mark" :class="{ 'brand-mark--small': small }" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><b></b>
+    </span>
+  </template>
+
+  <template id="project-card-template">
+    <article
+      class="project-card reveal-item"
+      :class="[`project-card--${project.tone}`, { 'project-card--voted': hasVoted }]"
+      :style="{ '--delay': `${index * 55}ms`, '--tilt-x': tiltX + 'deg', '--tilt-y': tiltY + 'deg' }"
+      tabindex="0"
+      @click="$emit('open', project)"
+      @keydown.enter="$emit('open', project)"
+      @pointermove="onTilt"
+      @pointerleave="resetTilt"
+    >
+      <div class="project-card__glow" aria-hidden="true"></div>
+      <div class="project-card__topline">
+        <span class="status-pill" :class="`status-pill--${project.status.toLowerCase()}`">
+          <span class="status-pill__dot"></span>{{ statusLabel(project.status) }}
+        </span>
+        <span class="project-card__signal" v-if="project.signal">{{ project.signal }}</span>
+      </div>
+
+      <div class="project-card__body">
+        <div class="project-card__eyebrow">
+          <span v-for="tag in project.tags.slice(0, 2)" :key="tag">{{ tag }}</span>
+        </div>
+        <h3>{{ project.name }}</h3>
+        <p>{{ project.idea }}</p>
+      </div>
+
+      <div class="project-card__meta">
+        <div class="owner-chip">
+          <span class="avatar avatar--sm" :style="avatarStyle(owner)">{{ initials(owner.name) }}</span>
+          <span><small>Porté par</small><strong>{{ owner.name }}</strong></span>
+        </div>
+        <div class="member-stack" :aria-label="`${project.memberIds.length} contributeurs`">
+          <span
+            v-for="(member, memberIndex) in members.slice(0, 3)"
+            :key="member.id"
+            class="avatar avatar--xs"
+            :style="{ ...avatarStyle(member), '--stack-index': memberIndex }"
+          >{{ initials(member.name) }}</span>
+          <span v-if="project.memberIds.length > 3" class="avatar avatar--xs avatar--more">+{{ project.memberIds.length - 3 }}</span>
+        </div>

@@ -1,0 +1,84 @@
+une méthode ou résoudre ensemble une petite problématique.',
+      roleNeeds:[{id:'r-mentor-1',name:'Binômes pilotes',description:'Tester le format et partager un retour honnête.',icon:'users'}],applications:[],createdAt:'2026-08-12T08:40:00Z',updatedAt:'2026-08-12T08:40:00Z'
+    },
+    {
+      id:'p-impact-map',name:'Impact Map',
+      idea:'Une vue simple et vivante de l’impact de nos projets : ce qu’ils changent pour les utilisateurs, les équipes et l’environnement.',
+      status:'IDEA',tone:'ink',signal:'À explorer',tags:['Impact','Data'],ownerId:'u-nora',editorIds:['u-hugo'],memberIds:['u-nora','u-hugo'],votes:['u-lea','u-chloe','u-sarah','u-hugo'],
+      goal:'Rendre l’impact concret, lisible et discutable.',impact:'De meilleures décisions et une vision commune de la valeur créée.',description:'Le premier objectif serait une carte qualitative, alimentée par quelques signaux fiables plutôt qu’un tableau de bord rempli de métriques fragiles.',
+      roleNeeds:[{id:'r-impact-1',name:'Expert métier',description:'Identifier les signaux réellement utiles.',icon:'briefcase'},{id:'r-impact-2',name:'Data designer',description:'Créer une visualisation claire et honnête.',icon:'chart'}],applications:[],createdAt:'2026-08-07T15:20:00Z',updatedAt:'2026-08-11T13:00:00Z'
+    },
+    {
+      id:'p-commute',name:'Green commute challenge',
+      idea:'Un défi collectif et non culpabilisant pour tester, pendant un mois, des trajets plus doux et partager les solutions locales qui fonctionnent.',
+      status:'COMPLETED',tone:'lime',signal:'Expérience terminée',tags:['RSE','Collectif'],ownerId:'u-hugo',editorIds:['u-sarah'],memberIds:['u-hugo','u-sarah','u-lea','u-malik','u-chloe','u-nora'],votes:['u-lea','u-malik','u-chloe','u-sarah','u-nora'],
+      goal:'Découvrir ce qui rend réellement les mobilités douces praticables.',impact:'Des habitudes plus durables et des solutions concrètes partagées.',description:'L’expérimentation a permis de documenter les freins, les bons itinéraires et les aides disponibles sans transformer le sujet en compétition individuelle.',roleNeeds:[],applications:[],createdAt:'2026-06-12T10:00:00Z',updatedAt:'2026-07-30T17:00:00Z'
+    },
+    {
+      id:'p-office-signal',name:'Office Signal',
+      idea:'Rendre visible en un coup d’œil qui sera au bureau, les moments de vie d’équipe et les espaces disponibles, sans outil de planning lourd.',
+      status:'ARCHIVED',tone:'coral',signal:'Archivé',tags:['Outil interne','Bureaux'],ownerId:'u-lea',editorIds:[],memberIds:['u-lea'],votes:['u-hugo'],goal:'Faciliter les rencontres spontanées.',impact:'Moins de coordination inutile.',description:'L’idée reste consultable mais a été mise en pause après les premiers échanges afin de ne pas dupliquer un outil déjà utilisé.',roleNeeds:[],applications:[],createdAt:'2026-05-19T09:00:00Z',updatedAt:'2026-06-03T09:00:00Z'
+    }
+  ];
+
+  const activitySeed = [
+    { id:'e1', type:'vote', text:'<strong>Malik</strong> et 3 autres personnes ont soutenu <strong>La demi-journée sans réunion</strong>.', time:'Il y a 18 min', projectId:'p-focus' },
+    { id:'e2', type:'join', text:'<strong>Chloé</strong> propose de contribuer à <strong>Pulse</strong> comme facilitatrice.', time:'Il y a 1 h', projectId:'p-pulse' },
+    { id:'e3', type:'create', text:'<strong>Nora</strong> a fait éclore une nouvelle idée : <strong>Impact Map</strong>.', time:'Hier à 15:20', projectId:'p-impact-map' },
+    { id:'e4', type:'status', text:'<strong>Bloomind Studio</strong> est passé au statut <strong>En cours</strong>.', time:'Hier à 11:05', projectId:'p-studio' },
+    { id:'e5', type:'join', text:'Deux nouveaux contributeurs ont rejoint <strong>Le mentorat croisé</strong>.', time:'Mardi à 16:40', projectId:'p-mentor' },
+    { id:'e6', type:'vote', text:'Le cap des <strong>25 soutiens</strong> a été franchi cette semaine.', time:'Lundi à 09:15' },
+  ];
+
+  const ProjectCard = {
+    template: '#project-card-template',
+    components: {},
+    props: {
+      project: { type:Object, required:true }, index:{ type:Number, default:0 }, users:{type:Array,required:true}, currentUser:{type:Object,required:true}
+    },
+    emits:['open','vote'],
+    setup(props,{emit}) {
+      const tiltX = ref(0); const tiltY = ref(0); const bursting = ref(false);
+      const userById = (id) => props.users.find((user) => user.id === id) || props.users[0];
+      const owner = computed(() => userById(props.project.ownerId));
+      const members = computed(() => props.project.memberIds.map(userById));
+      const hasVoted = computed(() => props.project.votes.includes(props.currentUser.id));
+      const initials = (name='') => name.split(/\s+/).map((part) => part[0]).join('').slice(0,2).toUpperCase();
+      const avatarStyle = (user) => ({ '--avatar-bg': user?.avatarBg || '#ddd', '--avatar-ink': user?.avatarInk || '#222' });
+      const statusLabel = (status) => ({ IDEA:'Idée', IN_PROGRESS:'En cours', COMPLETED:'Terminé', ARCHIVED:'Archivé' }[status] || status);
+      const onTilt = (event) => {
+        if (window.matchMedia('(hover: none)').matches) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        tiltY.value = ((event.clientX - rect.left) / rect.width - .5) * 5.5;
+        tiltX.value = -((event.clientY - rect.top) / rect.height - .5) * 5.5;
+      };
+      const resetTilt = () => { tiltX.value = 0; tiltY.value = 0; };
+      const pulseVote = (event) => {
+        const button = event.currentTarget;
+        button.classList.remove('is-bursting');
+        void button.offsetWidth;
+        button.classList.add('is-bursting');
+        setTimeout(() => button.classList.remove('is-bursting'), 750);
+        emit('vote', props.project);
+      };
+      return { tiltX,tiltY,owner,members,hasVoted,initials,avatarStyle,statusLabel,onTilt,resetTilt,pulseVote,bursting };
+    }
+  };
+
+  const Icon = { template:'#icon-template', props:{ name:{type:String,required:true}, className:{type:String,default:''} } };
+  const BrandMark = { template:'#brand-mark-template', props:{ small:{type:Boolean,default:false} } };
+
+  const app = createApp({
+    template:'#app-template',
+    components:{ 'project-card':ProjectCard, 'app-icon':Icon, 'brand-mark':BrandMark },
+    setup() {
+      const users = reactive(clone(usersSeed));
+      const stored = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return null; } })();
+      const projects = ref(Array.isArray(stored?.projects) ? stored.projects : clone(projectsSeed));
+      const activityEvents = ref(Array.isArray(stored?.activity) ? stored.activity : clone(activitySeed));
+      const currentUserId = ref(localStorage.getItem(USER_KEY) || 'u-lea');
+      const currentView = ref('board');
+      const search = ref(''); const statusFilter = ref('ALL'); const sortBy = ref('trending');
+      const mineTab = ref('created');
+      const selectedProjectId = ref(null);
+      const projectFormOpen = ref(false); const editingProjectId = ref(null); const optionalFo

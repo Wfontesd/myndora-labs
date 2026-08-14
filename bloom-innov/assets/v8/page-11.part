@@ -1,0 +1,44 @@
+span>Explorer</span></button>
+        <button :class="{ 'is-active': currentView === 'mine' }" @click="goTo('mine')"><app-icon name="user"></app-icon><span>Mon espace</span></button>
+        <button class="mobile-nav__create" @click="openCreate"><app-icon name="plus"></app-icon></button>
+        <button :class="{ 'is-active': currentView === 'activity' }" @click="goTo('activity')"><app-icon name="pulse"></app-icon><span>Activité</span></button>
+        <button @click="userMenuOpen = !userMenuOpen"><span class="avatar avatar--xs" :style="avatarStyle(currentUser)">{{ initials(currentUser.name) }}</span><span>Profil</span></button>
+      </nav>
+
+      <!-- Project detail -->
+      <transition name="drawer">
+        <div v-if="selectedProject" class="drawer-layer" @click.self="closeProject">
+          <article class="project-drawer" :class="`project-drawer--${selectedProject.tone}`">
+            <button class="drawer-close" type="button" @click="closeProject" aria-label="Fermer"><app-icon name="x"></app-icon></button>
+            <div class="project-drawer__hero">
+              <div class="project-drawer__pattern" aria-hidden="true"><span></span><span></span><span></span></div>
+              <div class="project-drawer__badges"><span class="status-pill" :class="`status-pill--${selectedProject.status.toLowerCase()}`"><span class="status-pill__dot"></span>{{ statusLabel(selectedProject.status) }}</span><span v-for="tag in selectedProject.tags" :key="tag" class="tag-pill">{{ tag }}</span></div>
+              <h2>{{ selectedProject.name }}</h2>
+              <p>{{ selectedProject.idea }}</p>
+              <div class="project-drawer__owner"><span class="avatar" :style="avatarStyle(userById(selectedProject.ownerId))">{{ initials(userById(selectedProject.ownerId).name) }}</span><span><small>Une idée portée par</small><strong>{{ userById(selectedProject.ownerId).name }}</strong><em>· {{ formatDate(selectedProject.createdAt) }}</em></span></div>
+            </div>
+
+            <div class="project-drawer__actions">
+              <button class="support-button support-button--large" :class="{ 'is-active': selectedProject.votes.includes(currentUserId) }" @click="toggleVote(selectedProject)"><app-icon name="heart"></app-icon><span>{{ selectedProject.votes.length }}</span>{{ selectedProject.votes.includes(currentUserId) ? 'Soutenu' : 'Soutenir cette idée' }}</button>
+              <button class="primary-button" @click="openJoin(selectedProject)"><app-icon name="hand"></app-icon>Contribuer</button>
+              <button v-if="canEdit(selectedProject)" class="icon-button icon-button--soft" @click="openEdit(selectedProject)" aria-label="Modifier"><app-icon name="edit"></app-icon></button>
+              <button v-if="canDelete(selectedProject)" class="icon-button icon-button--danger" @click="askDelete(selectedProject)" aria-label="Supprimer"><app-icon name="trash"></app-icon></button>
+            </div>
+
+            <div class="project-drawer__content">
+              <section class="detail-bento detail-bento--wide"><span class="detail-bento__icon"><app-icon name="bulb"></app-icon></span><span class="section-kicker">L’idée en clair</span><h3>{{ selectedProject.goal || selectedProject.idea }}</h3><p>{{ selectedProject.description || 'Cette idée est encore volontairement simple. La discussion et les premiers soutiens permettront de préciser ensemble le meilleur chemin.' }}</p></section>
+              <section class="detail-bento"><span class="detail-bento__icon detail-bento__icon--secondary"><app-icon name="target"></app-icon></span><span class="section-kicker">Impact recherché</span><h3>{{ selectedProject.impact || 'Créer un effet concret et visible.' }}</h3><p>Le projet grandit au rythme des personnes qui le soutiennent et choisissent d’y contribuer.</p></section>
+              <section class="detail-bento"><span class="detail-bento__icon detail-bento__icon--tertiary"><app-icon name="users"></app-icon></span><span class="section-kicker">Équipe</span><h3>{{ selectedProject.memberIds.length }} personne{{ selectedProject.memberIds.length > 1 ? 's' : '' }} déjà à bord</h3><div class="detail-team"><span v-for="memberId in selectedProject.memberIds" :key="memberId" class="avatar" :style="avatarStyle(userById(memberId))" :title="userById(memberId).name">{{ initials(userById(memberId).name) }}</span><button @click="openJoin(selectedProject)"><app-icon name="plus"></app-icon></button></div></section>
+
+              <section class="detail-section detail-section--roles">
+                <div class="detail-section__heading"><div><span class="section-kicker">Les talents recherchés</span><h3>Il y a peut-être une place pour toi.</h3></div><button class="text-button" @click="openJoin(selectedProject)">Proposer mon aide <app-icon name="arrow-up-right"></app-icon></button></div>
+                <div v-if="selectedProject.roleNeeds.length" class="role-grid"><article v-for="role in selectedProject.roleNeeds" :key="role.id"><span class="role-grid__icon"><app-icon :name="role.icon || 'sparkles'"></app-icon></span><div><h4>{{ role.name }}</h4><p>{{ role.description }}</p></div><button @click="openJoin(selectedProject, role.name)"><app-icon name="plus"></app-icon></button></article></div>
+                <div v-else class="open-contribution"><app-icon name="sparkles"></app-icon><div><strong>Aucun rôle figé pour l’instant</strong><p>Explique simplement comment tu pourrais aider : les bonnes contributions ne rentrent pas toujours dans une case.</p></div><button class="secondary-button" @click="openJoin(selectedProject)">Me proposer</button></div>
+              </section>
+
+              <section v-if="canManageApplications(selectedProject) && selectedProject.applications.length" class="detail-section detail-section--applications">
+                <div class="detail-section__heading"><div><span class="section-kicker">À examiner</span><h3>Demandes de contribution</h3></div><span class="count-badge">{{ pendingApplications(selectedProject).length }} en attente</span></div>
+                <div class="application-list"><article v-for="application in selectedProject.applications" :key="application.id"><span class="avatar" :style="avatarStyle(userById(application.userId))">{{ initials(userById(application.userId).name) }}</span><div><h4>{{ userById(application.userId).name }} <span>· {{ application.role }}</span></h4><p>{{ application.message }}</p><small>{{ application.status === 'PENDING' ? 'En attente' : application.status === 'ACCEPTED' ? 'Acceptée' : 'Refusée' }}</small></div><div v-if="application.status === 'PENDING'" class="application-list__actions"><button class="icon-button icon-button--success" @click="reviewApplication(selectedProject, application, true)"><app-icon name="check"></app-icon></button><button class="icon-button icon-button--danger" @click="reviewApplication(selectedProject, application, false)"><app-icon name="x"></app-icon></button></div></article></div>
+              </section>
+            </div>
+ 

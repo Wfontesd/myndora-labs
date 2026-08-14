@@ -1,0 +1,49 @@
+         </article>
+        </div>
+      </transition>
+
+      <!-- Create/Edit modal -->
+      <transition name="modal">
+        <div v-if="projectFormOpen" class="modal-layer" @click.self="closeProjectForm">
+          <section class="form-modal" role="dialog" aria-modal="true" :aria-label="editingProject ? 'Modifier le projet' : 'Proposer une idée'">
+            <button class="modal-close" type="button" @click="closeProjectForm"><app-icon name="x"></app-icon></button>
+            <div class="form-modal__intro"><span class="form-modal__number">{{ editingProject ? 'EDIT' : '01' }}</span><span class="section-kicker">{{ editingProject ? 'Faire évoluer le projet' : 'Une idée suffit pour commencer' }}</span><h2>{{ editingProject ? 'Mets la fiche à jour.' : 'Qu’est-ce qui pourrait être mieux ?' }}</h2><p>{{ editingProject ? 'Modifie uniquement ce qui a évolué.' : 'Pas besoin d’avoir toutes les réponses. Donne simplement une forme à ton intuition.' }}</p></div>
+            <form @submit.prevent="saveProject">
+              <label class="form-field"><span>Nom du projet <b>*</b></span><input v-model.trim="projectForm.name" maxlength="80" required placeholder="Ex. Le mentorat croisé" /><small>{{ projectForm.name.length }}/80</small></label>
+              <label class="form-field"><span>L’idée <b>*</b></span><textarea v-model.trim="projectForm.idea" maxlength="420" required rows="5" placeholder="Décris l’idée avec tes mots : ce qu’elle change, à qui elle sert…"></textarea><small>{{ projectForm.idea.length }}/420</small></label>
+              <div class="status-choice"><span>Où en est-elle ? <b>*</b></span><div><label v-for="status in editableStatuses" :key="status.value" :class="{ 'is-active': projectForm.status === status.value }"><input v-model="projectForm.status" type="radio" :value="status.value" /><span class="status-dot" :class="`status-dot--${status.value.toLowerCase()}`"></span><strong>{{ status.label }}</strong><small>{{ status.help }}</small></label></div></div>
+
+              <button class="optional-toggle" type="button" :aria-expanded="optionalFormOpen" @click="optionalFormOpen = !optionalFormOpen"><span><app-icon name="sparkles"></app-icon><strong>Enrichir l’idée</strong><small>Objectif, impact et talents recherchés — optionnel</small></span><app-icon name="chevron-down" :class-name="optionalFormOpen ? 'is-rotated' : ''"></app-icon></button>
+              <transition name="accordion"><div v-if="optionalFormOpen" class="optional-fields"><label class="form-field"><span>Objectif</span><input v-model.trim="projectForm.goal" placeholder="Ce que l’on veut rendre possible" /></label><label class="form-field"><span>Impact attendu</span><input v-model.trim="projectForm.impact" placeholder="Ce qui changera concrètement" /></label><label class="form-field"><span>Thèmes <small>séparés par des virgules</small></span><input v-model="projectForm.tagsText" placeholder="Culture, Produit, RSE" /></label><label class="form-field"><span>Rôles recherchés <small>séparés par des virgules</small></span><input v-model="projectForm.rolesText" placeholder="Designer, Développeur, Expert métier" /></label></div></transition>
+              <div class="form-modal__footer"><button class="text-button" type="button" @click="closeProjectForm">Annuler</button><button class="primary-button primary-button--large" type="submit"><span>{{ editingProject ? 'Enregistrer' : 'Faire éclore l’idée' }}</span><app-icon name="arrow-up-right"></app-icon></button></div>
+            </form>
+          </section>
+        </div>
+      </transition>
+
+      <!-- Join modal -->
+      <transition name="modal">
+        <div v-if="joinOpen" class="modal-layer" @click.self="closeJoin">
+          <section class="join-modal" role="dialog" aria-modal="true" aria-label="Proposer ma contribution">
+            <button class="modal-close" type="button" @click="closeJoin"><app-icon name="x"></app-icon></button>
+            <div class="join-modal__visual"><span class="join-modal__orb join-modal__orb--one"></span><span class="join-modal__orb join-modal__orb--two"></span><brand-mark></brand-mark><strong>TOGETHER<br />WORKS BETTER</strong></div>
+            <div class="join-modal__content"><span class="section-kicker">Contribuer à</span><h2>{{ joiningProject?.name }}</h2><p>Dis simplement ce que tu aimerais apporter. Le porteur du projet pourra ensuite échanger avec toi.</p><form @submit.prevent="submitJoin"><label class="form-field"><span>Ton rôle ou ta contribution <b>*</b></span><select v-model="joinForm.role" required><option value="" disabled>Choisir ou proposer un rôle</option><option v-for="role in joiningProject?.roleNeeds || []" :key="role.id" :value="role.name">{{ role.name }}</option><option value="Autre contribution">Autre contribution</option></select></label><label class="form-field"><span>Ton message</span><textarea v-model.trim="joinForm.message" rows="4" maxlength="320" placeholder="Ce qui te motive, ce que tu peux apporter, tes disponibilités…"></textarea></label><button class="primary-button primary-button--large" type="submit"><span>Envoyer ma proposition</span><app-icon name="send"></app-icon></button></form></div>
+          </section>
+        </div>
+      </transition>
+
+      <!-- Confirm -->
+      <transition name="modal"><div v-if="confirmDeleteProject" class="modal-layer" @click.self="confirmDeleteProject = null"><section class="confirm-modal" role="alertdialog" aria-modal="true"><span class="confirm-modal__icon"><app-icon name="trash"></app-icon></span><h2>Supprimer cette idée ?</h2><p>« {{ confirmDeleteProject.name }} » disparaîtra aussi des soutiens et participations. Cette action est définitive dans la démo.</p><div><button class="text-button" @click="confirmDeleteProject = null">Conserver</button><button class="danger-button" @click="deleteProject">Supprimer</button></div></section></div></transition>
+
+      <!-- Onboarding -->
+      <transition name="onboarding">
+        <div v-if="onboardingOpen" class="onboarding" role="dialog" aria-modal="true" aria-label="Bienvenue sur Bloom’innov">
+          <div class="onboarding__noise"></div>
+          <button class="onboarding__skip" type="button" @click="finishOnboarding">Passer <app-icon name="arrow-up-right"></app-icon></button>
+          <div class="onboarding__brand"><span class="brand__company">bloomind<span>.</span></span><span></span><brand-mark small></brand-mark><strong>Bloom’innov</strong></div>
+
+          <transition name="onboarding-step" mode="out-in">
+            <section :key="onboardingStep" class="onboarding-step">
+              <div class="onboarding-step__copy">
+                <span class="onboarding-step__index">0{{ onboardingStep + 1 }} / 04</span>
+                <template v-if="onboardingStep === 0"><span class="section-kicker">Bienvenue dans l’espace des possibles</span><h1>Une bonne idée peut venir de <em>n’importe où.</em></h1><p>Bloom’innov donne à chaque personne un endroit simple pour partager une intuition, rencontrer les bons talents

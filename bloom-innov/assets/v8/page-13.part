@@ -1,0 +1,48 @@
+ et la faire grandir.</p></template>
+                <template v-else-if="onboardingStep === 1"><span class="section-kicker">Fais remonter ce qui compte</span><h1>Un soutien peut être le premier <em>signal fort.</em></h1><p>Vote pour les idées qui résonnent. Les projets les plus utiles deviennent visibles sans compétition artificielle ni score opaque.</p></template>
+                <template v-else-if="onboardingStep === 2"><span class="section-kicker">Les idées ont besoin de personnes</span><h1>Ne rejoins pas un projet. <em>Apporte ton rôle.</em></h1><p>Designer, développeur, expert métier ou simplement curieux : explique comment tu peux contribuer et construisez la suite ensemble.</p></template>
+                <template v-else><span class="section-kicker">Ton terrain de jeu</span><h1>Prêt à faire bouger <em>Bloomind ?</em></h1><p>Pour cette démonstration, choisis le profil avec lequel tu veux commencer. Tu pourras en changer à tout moment.</p><div class="onboarding-users"><button v-for="user in users" :key="user.id" :class="{ 'is-active': currentUserId === user.id }" @click="currentUserId = user.id"><span class="avatar" :style="avatarStyle(user)">{{ initials(user.name) }}</span><span><strong>{{ user.name }}</strong><small>{{ roleLabel(user) }}</small></span><app-icon v-if="currentUserId === user.id" name="check"></app-icon></button></div></template>
+              </div>
+
+              <div class="onboarding-step__visual" :class="`onboarding-step__visual--${onboardingStep}`" aria-hidden="true">
+                <div v-if="onboardingStep === 0" class="onboarding-flower"><span v-for="n in 8" :key="n" :style="{ '--petal': n }"></span><i></i><strong>WHAT IF?</strong></div>
+                <div v-else-if="onboardingStep === 1" class="onboarding-vote"><div class="onboarding-vote__card"><span class="status-pill status-pill--idea"><span class="status-pill__dot"></span>Idée</span><h3>La semaine sans réunion</h3><p>Réserver une demi-journée commune pour retrouver du temps de concentration.</p><button class="support-button is-active"><app-icon name="heart"></app-icon><strong>42</strong> soutiens</button></div><span v-for="n in 12" :key="n" class="onboarding-vote__heart" :style="{ '--heart': n }">♥</span></div>
+                <div v-else-if="onboardingStep === 2" class="onboarding-network"><div class="onboarding-network__center"><brand-mark></brand-mark></div><div v-for="(user, index) in users.slice(0, 5)" :key="user.id" class="onboarding-network__person" :style="{ '--person': index }"><span class="avatar" :style="avatarStyle(user)">{{ initials(user.name) }}</span><small>{{ ['Design','Tech','Métier','Data','Ops'][index] }}</small></div><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="160"/><circle cx="250" cy="250" r="105"/></svg></div>
+                <div v-else class="onboarding-ready"><span class="onboarding-ready__word">LET’S</span><brand-mark></brand-mark><span class="onboarding-ready__word onboarding-ready__word--bottom">BLOOM</span><div class="onboarding-ready__badge">INTERNAL<br />BETA</div></div>
+              </div>
+            </section>
+          </transition>
+
+          <div class="onboarding__footer">
+            <div class="onboarding__progress"><button v-for="n in 4" :key="n" :class="{ 'is-active': onboardingStep === n - 1, 'is-done': onboardingStep > n - 1 }" @click="onboardingStep = n - 1"><span></span></button></div>
+            <div><button v-if="onboardingStep > 0" class="onboarding-back" type="button" @click="onboardingStep--"><app-icon name="arrow-left"></app-icon>Retour</button><button class="onboarding-next" type="button" @click="nextOnboarding"><span>{{ onboardingStep === 3 ? 'Entrer dans Bloom’innov' : 'Continuer' }}</span><app-icon name="arrow-right"></app-icon></button></div>
+          </div>
+        </div>
+      </transition>
+
+      <div class="toast-stack" aria-live="polite"><transition-group name="toast"><article v-for="toast in toasts" :key="toast.id" class="toast" :class="`toast--${toast.type}`"><span><app-icon :name="toastIcon(toast.type)"></app-icon></span><div><strong>{{ toast.title }}</strong><p>{{ toast.message }}</p></div><button @click="dismissToast(toast.id)"><app-icon name="x"></app-icon></button></article></transition-group></div>
+      <div ref="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+    </div>
+  </template>
+
+  <svg class="svg-sprite" aria-hidden="true" width="0" height="0">
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="icon-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="icon-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="m12 3-1.2 3.3L7.5 7.5l3.3 1.2L12 12l1.2-3.3 3.3-1.2-3.3-1.2ZM5 14l-.8 2.2L2 17l2.2.8L5 20l.8-2.2L8 17l-2.2-.8ZM18 14l-1 2.8-2.8 1L17 19l1 2.8 1-2.8 2.8-1-2.8-1Z"/></symbol>
+    <symbol id="icon-rotate" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4Z"/></symbol>
+    <symbol id="icon-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8.5 15.5a7 7 0 1 1 7 0c-.9.6-1.5 1.5-1.5 2.5h-4c0-1-.6-1.9-1.5-2.5Z"/></symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circ

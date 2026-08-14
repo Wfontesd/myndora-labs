@@ -1,0 +1,66 @@
+le cx="12" cy="12" r="1"/></symbol>
+    <symbol id="icon-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h6"/></symbol>
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 4 13C4 6 20 3 20 3s1 16-6 17Z"/><path d="M4 21c4-7 9-10 16-18"/></symbol>
+    <symbol id="icon-hand" viewBox="0 0 24 24"><path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v7-5a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1a7 7 0 0 1-5-2l-3-3a2 2 0 0 1 3-3l2 2Z"/></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="icon-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12 12 0 0 1 22 2c0 2.72-.78 7.5-6.05 11a22 22 0 0 1-3.95 2Z"/><circle cx="16" cy="8" r="1"/></symbol>
+    <symbol id="icon-code" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></symbol>
+    <symbol id="icon-pen" viewBox="0 0 24 24"><path d="m12 19 7-7 3 3-7 7-4 1ZM18 13l-7-7 3-3 7 7M2 22l7-7"/></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20V7"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></symbol>
+  </svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script>window.Vue || document.write('<script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"><\/script>')</script>
+  <script data-build="20260814-8">
+(() => {
+  'use strict';
+
+  const { createApp, computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } = Vue;
+  const STORAGE_KEY = 'bloominnov:data:v5';
+  const USER_KEY = 'bloominnov:user:v5';
+  const ONBOARDING_KEY = 'bloominnov:onboarding:v5';
+
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const nowIso = () => new Date().toISOString();
+  const uid = (prefix = 'id') => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const usersSeed = [
+    { id: 'u-lea', name: 'Léa Martin', role: 'Product Designer', globalRole: 'USER', avatarBg: '#FFD6C8', avatarInk: '#54261B' },
+    { id: 'u-malik', name: 'Malik Benali', role: 'Développeur frontend', globalRole: 'USER', avatarBg: '#CFE8FF', avatarInk: '#173B5D' },
+    { id: 'u-chloe', name: 'Chloé Bernard', role: 'Consultante produit', globalRole: 'USER', avatarBg: '#E5DFFF', avatarInk: '#3B2B75' },
+    { id: 'u-hugo', name: 'Hugo Laurent', role: 'Administrateur', globalRole: 'ADMIN', avatarBg: '#DDF7B8', avatarInk: '#234311' },
+    { id: 'u-sarah', name: 'Sarah Petit', role: 'People & Culture', globalRole: 'USER', avatarBg: '#FFE5AA', avatarInk: '#5A3D00' },
+    { id: 'u-nora', name: 'Nora Diallo', role: 'Data strategist', globalRole: 'USER', avatarBg: '#C9F3E6', avatarInk: '#174B3C' },
+  ];
+
+  const projectsSeed = [
+    {
+      id: 'p-pulse', name: 'Pulse — le feedback en continu',
+      idea: 'Créer un rituel très léger pour partager chaque semaine ce qui nous aide, ce qui nous freine et ce que l’on aimerait essayer.',
+      status: 'IN_PROGRESS', tone: 'coral', signal: 'Très actif', tags: ['Culture', 'Collaboration'], ownerId: 'u-sarah', editorIds: ['u-lea'], memberIds: ['u-sarah', 'u-lea', 'u-malik', 'u-nora'], votes: ['u-lea','u-malik','u-chloe','u-hugo','u-nora'],
+      goal: 'Rendre les signaux faibles visibles avant qu’ils ne deviennent des problèmes.',
+      impact: 'Une boucle d’amélioration plus rapide et plus saine.',
+      description: 'Une impulsion courte, asynchrone et transparente. Le but n’est pas de mesurer les personnes, mais de donner aux équipes un espace pour ajuster leur manière de travailler.',
+      roleNeeds: [{ id:'r-pulse-1', name:'Développeur frontend', description:'Prototyper une première expérience web légère.', icon:'code' },{ id:'r-pulse-2', name:'Facilitateur', description:'Concevoir un rituel simple et bienveillant.', icon:'sparkles' }],
+      applications: [{ id:'a-pulse-1', userId:'u-chloe', role:'Facilitateur', message:'Je peux aider à cadrer les questions et tester le rituel avec une équipe pilote.', status:'PENDING', createdAt:'2026-08-13T10:00:00Z' }], createdAt:'2026-08-02T09:00:00Z', updatedAt:'2026-08-14T08:45:00Z'
+    },
+    {
+      id: 'p-focus', name: 'La demi-journée sans réunion',
+      idea: 'Bloquer un créneau commun, une fois par semaine, pour permettre à tout le monde de retrouver du temps de concentration profonde.',
+      status: 'IDEA', tone: 'violet', signal: '+9 soutiens', tags: ['Organisation', 'Bien-être'], ownerId: 'u-chloe', editorIds: [], memberIds: ['u-chloe'], votes: ['u-lea','u-malik','u-sarah','u-nora','u-hugo','u-chloe'],
+      goal: 'Faire de la place au travail de fond sans allonger les journées.', impact: 'Moins de fragmentation, plus de qualité et de sérénité.', description:'Une expérimentation de quatre semaines, avec un créneau commun choisi par les équipes et un bilan simple sur la qualité du travail produit.',
+      roleNeeds: [{ id:'r-focus-1', name:'Équipe pilote', description:'Tester le rituel pendant quatre semaines.', icon:'rocket' }], applications: [], createdAt:'2026-08-10T14:20:00Z', updatedAt:'2026-08-14T07:30:00Z'
+    },
+    {
+      id: 'p-studio', name: 'Bloomind Studio',
+      idea: 'Un petit studio interne pour transformer plus facilement nos expertises, retours terrain et expérimentations en contenus utiles.',
+      status: 'IN_PROGRESS', tone: 'lime', signal: 'Équipe en formation', tags: ['Contenu', 'Marque'], ownerId: 'u-lea', editorIds: ['u-chloe'], memberIds: ['u-lea','u-chloe','u-sarah'], votes: ['u-malik','u-chloe','u-hugo','u-sarah'],
+      goal:'Donner une forme claire et désirable à ce que nous apprenons.', impact:'Une culture du partage plus forte, en interne comme à l’extérieur.', description:'Formats courts, templates réutilisables et entraide éditoriale : le studio doit enlever de la friction, pas créer un nouveau process lourd.',
+      roleNeeds:[{id:'r-studio-1',name:'Motion designer',description:'Donner du mouvement aux contenus clés.',icon:'play'},{id:'r-studio-2',name:'Rédacteur',description:'Aider à structurer et simplifier les idées.',icon:'pen'}], applications:[], createdAt:'2026-07-25T11:10:00Z', updatedAt:'2026-08-13T16:10:00Z'
+    },
+    {
+      id:'p-mentor', name:'Le mentorat croisé',
+      idea:'Mettre en relation deux personnes de métiers différents pendant six semaines pour apprendre l’une de l’autre sur un sujet concret.',
+      status:'IDEA', tone:'sky', signal:'Nouveau', tags:['Apprentissage','Transverse'], ownerId:'u-malik', editorIds:[], memberIds:['u-malik','u-nora'], votes:['u-lea','u-sarah','u-nora'],
+      goal:'Faire circuler les savoir-faire entre les métiers.', impact:'Des collaborations plus fluides et une meilleure compréhension des contraintes de chacun.', description:'Chaque binôme choisit un objectif simple : découvrir un outil, comprendre 

@@ -1,0 +1,71 @@
+    const palette = ['var(--primary)','var(--secondary)','var(--tertiary)','var(--sky)','#fff'];
+        for (let i=0; i<count; i++) {
+          const piece = document.createElement('i'); piece.className = 'confetti';
+          piece.style.setProperty('--x',`${originX + (Math.random()-.5)*15}%`);
+          piece.style.setProperty('--y',`${originY + (Math.random()-.5)*8}%`);
+          piece.style.setProperty('--size',`${5 + Math.random()*6}px`);
+          piece.style.setProperty('--color',palette[i % palette.length]);
+          piece.style.setProperty('--duration',`${1.8 + Math.random()*1.5}s`);
+          piece.style.setProperty('--rotation',`${Math.random()*360}deg`);
+          piece.style.setProperty('--drift',`${(Math.random()-.5)*360}px`);
+          confettiLayer.value.appendChild(piece); setTimeout(() => piece.remove(), 3600);
+        }
+      }
+
+      function goTo(view) { currentView.value = view; userMenuOpen.value = false; window.scrollTo({top:0,behavior:'smooth'}); nextTick(setupReveal); }
+      function scrollToProjects() { projectsSection.value?.scrollIntoView({behavior:'smooth',block:'start'}); }
+      function openProject(project) { if (!project) return; selectedProjectId.value = project.id; userMenuOpen.value = false; }
+      function closeProject() { selectedProjectId.value = null; }
+      function toggleVote(project) {
+        if (!project || project.status === 'ARCHIVED') { notify('Projet archivé','Cette idée reste consultable mais ne reçoit plus de nouveaux soutiens.','info'); return; }
+        const index = project.votes.indexOf(currentUserId.value);
+        if (index >= 0) {
+          project.votes.splice(index,1); notify('Soutien retiré','Tu peux le remettre à tout moment.','info');
+        } else {
+          project.votes.push(currentUserId.value); project.updatedAt = nowIso();
+          activityEvents.value.unshift({id:uid('event'),type:'vote',text:`<strong>${currentUser.value.name.split(' ')[0]}</strong> a soutenu <strong>${project.name}</strong>.`,time:'À l’instant',projectId:project.id});
+          notify('Ton soutien compte',`« ${project.name} » gagne en visibilité.`,'love'); burstConfetti(50,54,18);
+        }
+      }
+
+      function resetObject(target,source) { Object.keys(target).forEach((key) => delete target[key]); Object.assign(target,source); }
+      function openCreate() { editingProjectId.value = null; resetObject(projectForm,emptyProjectForm()); optionalFormOpen.value = false; projectFormOpen.value = true; userMenuOpen.value = false; }
+      function openEdit(project) {
+        if (!canEdit(project)) return;
+        editingProjectId.value = project.id;
+        resetObject(projectForm,{ name:project.name,idea:project.idea,status:project.status,goal:project.goal || '',impact:project.impact || '',tagsText:project.tags.join(', '),rolesText:project.roleNeeds.map((r) => r.name).join(', ') });
+        optionalFormOpen.value = Boolean(project.goal || project.impact || project.tags.length || project.roleNeeds.length); projectFormOpen.value = true;
+      }
+      function closeProjectForm() { projectFormOpen.value = false; editingProjectId.value = null; }
+      function saveProject() {
+        const name = projectForm.name.trim(); const idea = projectForm.idea.trim();
+        if (name.length < 3 || idea.length < 12) { notify('Il manque un peu de matière','Ajoute un nom clair et au moins une phrase pour décrire l’idée.','info'); return; }
+        const tags = projectForm.tagsText.split(',').map((item) => item.trim()).filter(Boolean).slice(0,5);
+        const roles = projectForm.rolesText.split(',').map((item) => item.trim()).filter(Boolean).slice(0,5);
+        if (editingProject.value) {
+          const project = editingProject.value; Object.assign(project,{name,idea,status:projectForm.status,goal:projectForm.goal.trim(),impact:projectForm.impact.trim(),tags:tags.length?tags:['Interne'],roleNeeds:roles.map((role,index) => ({id:project.roleNeeds[index]?.id || uid('role'),name:role,description:project.roleNeeds[index]?.description || 'Préciser ensemble la contribution.',icon:['sparkles','code','pen','briefcase'][index%4]})),updatedAt:nowIso()});
+          notify('Projet mis à jour','Les nouvelles informations sont déjà visibles.','success');
+        } else {
+          const tones = ['coral','violet','lime','sky','ink'];
+          const project = { id:uid('project'),name,idea,status:projectForm.status,tone:tones[projects.value.length%tones.length],signal:'Nouveau',tags:tags.length?tags:['Nouvelle idée'],ownerId:currentUserId.value,editorIds:[],memberIds:[currentUserId.value],votes:[],goal:projectForm.goal.trim(),impact:projectForm.impact.trim(),description:'',roleNeeds:roles.map((role,index)=>({id:uid('role'),name:role,description:'Préciser ensemble la contribution.',icon:['sparkles','code','pen','briefcase'][index%4]})),applications:[],createdAt:nowIso(),updatedAt:nowIso() };
+          projects.value.unshift(project); activityEvents.value.unshift({id:uid('event'),type:'create',text:`<strong>${currentUser.value.name.split(' ')[0]}</strong> a fait éclore une nouvelle idée : <strong>${project.name}</strong>.`,time:'À l’instant',projectId:project.id});
+          notify('L’idée est en ligne',`« ${project.name} » peut maintenant être soutenue et enrichie.`,'success'); burstConfetti(58,34,48); nextTick(() => openProject(project));
+        }
+        closeProjectForm();
+      }
+      function askDelete(project) { confirmDeleteProjectId.value = project.id; }
+      function deleteProject() {
+        const project = confirmDeleteProject.value; if (!project || !canDelete(project)) return;
+        projects.value = projects.value.filter((item) => item.id !== project.id); selectedProjectId.value = null; confirmDeleteProjectId.value = null;
+        activityEvents.value = activityEvents.value.filter((event) => event.projectId !== project.id); notify('Idée supprimée','Le projet a été retiré de la démonstration.','danger');
+      }
+
+      function openJoin(project,presetRole='') {
+        if (!project || ['COMPLETED','ARCHIVED'].includes(project.status)) { notify('Contribution fermée','Ce projet n’accepte plus de nouvelles demandes pour le moment.','info'); return; }
+        if (project.ownerId === currentUserId.value) { notify('Tu portes déjà cette idée','Tu peux plutôt modifier les rôles recherchés depuis la fiche.','info'); return; }
+        if (project.memberIds.includes(currentUserId.value)) { notify('Tu es déjà dans l’équipe','Retrouve ce projet dans ton espace personnel.','info'); return; }
+        const existing = project.applications.find((application) => application.userId === currentUserId.value && application.status === 'PENDING');
+        if (existing) { notify('Demande déjà envoyée',`Ta proposition pour « ${existing.role} » est en attente.`,'info'); return; }
+        joiningProjectId.value = project.id; joinForm.role = presetRole || project.roleNeeds[0]?.name || ''; joinForm.message = ''; joinOpen.value = true;
+      }
+      function closeJoin() { joinO

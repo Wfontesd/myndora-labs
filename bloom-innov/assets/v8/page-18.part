@@ -1,0 +1,72 @@
+pen.value = false; joiningProjectId.value = null; }
+      function submitJoin() {
+        const project = joiningProject.value; if (!project || !joinForm.role) return;
+        project.applications.push({id:uid('application'),userId:currentUserId.value,role:joinForm.role,message:joinForm.message.trim() || 'Je serais ravi·e d’échanger pour voir comment je peux aider.',status:'PENDING',createdAt:nowIso()});
+        activityEvents.value.unshift({id:uid('event'),type:'join',text:`<strong>${currentUser.value.name.split(' ')[0]}</strong> propose de contribuer à <strong>${project.name}</strong>.`,time:'À l’instant',projectId:project.id});
+        notify('Proposition envoyée',`${userById(project.ownerId).name.split(' ')[0]} pourra maintenant l’examiner.`,'success'); closeJoin();
+      }
+      function reviewApplication(project,application,accepted) {
+        if (!canManageApplications(project)) return;
+        application.status = accepted ? 'ACCEPTED' : 'REJECTED';
+        if (accepted && !project.memberIds.includes(application.userId)) project.memberIds.push(application.userId);
+        notify(accepted?'Contribution acceptée':'Demande refusée',accepted?`${userById(application.userId).name} rejoint maintenant l’équipe.`:'La demande a été classée.','success');
+        if (accepted) burstConfetti(74,52,24);
+      }
+
+      function switchUser(id) { currentUserId.value = id; userMenuOpen.value = false; localStorage.setItem(USER_KEY,id); notify('Profil changé',`Tu explores maintenant la démo en tant que ${currentUser.value.name}.`,'info'); }
+      function resetDemo() {
+        if (!window.confirm('Réinitialiser toutes les données de démonstration ?')) return;
+        projects.value = clone(projectsSeed); activityEvents.value = clone(activitySeed); selectedProjectId.value = null; userMenuOpen.value = false; localStorage.removeItem(STORAGE_KEY); notify('Démo réinitialisée','Les idées et interactions d’origine sont restaurées.','success');
+      }
+      function openOnboarding(replay=false) { onboardingStep.value = 0; onboardingOpen.value = true; userMenuOpen.value = false; if (replay) notify('Bienvenue à nouveau','La présentation peut être passée à tout moment.','info'); }
+      function nextOnboarding() { if (onboardingStep.value < 3) onboardingStep.value += 1; else finishOnboarding(); }
+      function finishOnboarding() { onboardingOpen.value = false; localStorage.setItem(ONBOARDING_KEY,'done'); burstConfetti(50,6,60); setTimeout(() => notify('Bienvenue dans Bloom’innov','Commence par explorer ou partage ta première intuition.','success'),250); }
+
+      function animateNumber(key,target,duration=900) {
+        const start = performance.now();
+        const tick = (time) => { const p = Math.min(1,(time-start)/duration); animatedStats[key] = Math.round(target*(1-Math.pow(1-p,3))); if(p<1) requestAnimationFrame(tick); };
+        requestAnimationFrame(tick);
+      }
+      function setupReveal() {
+        observer?.disconnect();
+        observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if(entry.isIntersecting){ entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } }),{threshold:.12,rootMargin:'0px 0px -30px'});
+        document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+      }
+      function onMouseMove(event) { cursorStyle['--cursor-x'] = `${event.clientX}px`; cursorStyle['--cursor-y'] = `${event.clientY}px`; }
+      function onKeydown(event) {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); goTo('board'); nextTick(() => document.querySelector('.search-field input')?.focus()); }
+        if (event.key === 'Escape') { if(onboardingOpen.value) return; if(confirmDeleteProject.value) confirmDeleteProjectId.value=null; else if(joinOpen.value) closeJoin(); else if(projectFormOpen.value) closeProjectForm(); else if(selectedProject.value) closeProject(); else userMenuOpen.value=false; }
+      }
+      function onOutsideClick(event) { if (!event.target.closest('.profile-switcher')) userMenuOpen.value = false; }
+
+      watch([projects,activityEvents],() => { localStorage.setItem(STORAGE_KEY,JSON.stringify({projects:projects.value,activity:activityEvents.value})); },{deep:true});
+      watch(currentUserId,(value) => localStorage.setItem(USER_KEY,value));
+      watch(anyModalOpen,(open) => document.documentElement.style.overflow = open ? 'hidden' : '');
+
+      onMounted(() => {
+        nextTick(setupReveal);
+        animateNumber('projects',projects.value.length); animateNumber('votes',totalVotes.value); animateNumber('members',totalMembers.value);
+        wordTimer = setInterval(() => rotatingWordIndex.value = (rotatingWordIndex.value + 1) % rotatingWords.length,2600);
+        document.addEventListener('mousemove',onMouseMove,{passive:true}); document.addEventListener('keydown',onKeydown); document.addEventListener('click',onOutsideClick);
+      });
+      onBeforeUnmount(() => { clearInterval(wordTimer); observer?.disconnect(); document.removeEventListener('mousemove',onMouseMove); document.removeEventListener('keydown',onKeydown); document.removeEventListener('click',onOutsideClick); document.documentElement.style.overflow=''; });
+
+      return {
+        users,projects,activityEvents,currentUserId,currentUser,currentView,search,statusFilter,sortBy,statusFilters,editableStatuses,mineTabs,mineTab,
+        selectedProject,projectFormOpen,editingProject,projectForm,optionalFormOpen,joinOpen,joiningProject,joinForm,confirmDeleteProject,userMenuOpen,onboardingOpen,onboardingStep,
+        toasts,projectsSection,confettiLayer,cursorStyle,rotatingWords,rotatingWordIndex,animatedStats,openRolesCount,filteredProjects,myFilteredProjects,anyModalOpen,
+        userById,projectById,initials,avatarStyle,statusLabel,roleLabel,formatDate,filterCount,mineCount,canEdit,canDelete,canManageApplications,pendingApplications,activityIcon,toastIcon,
+        goTo,scrollToProjects,openProject,closeProject,toggleVote,openCreate,openEdit,closeProjectForm,saveProject,askDelete,deleteProject,openJoin,closeJoin,submitJoin,reviewApplication,
+        switchUser,resetDemo,openOnboarding,nextOnboarding,finishOnboarding,dismissToast
+      };
+    }
+  });
+
+  app.component('app-icon',Icon);
+  app.component('brand-mark',BrandMark);
+  app.mount('#app');
+})();
+
+  </script>
+</body>
+</html>

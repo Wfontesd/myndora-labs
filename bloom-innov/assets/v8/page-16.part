@@ -1,0 +1,88 @@
+rmOpen = ref(false);
+      const joinOpen = ref(false); const joiningProjectId = ref(null);
+      const confirmDeleteProjectId = ref(null); const userMenuOpen = ref(false);
+      const onboardingOpen = ref(!localStorage.getItem(ONBOARDING_KEY)); const onboardingStep = ref(0);
+      const toasts = ref([]);
+      const projectsSection = ref(null); const confettiLayer = ref(null);
+      const cursorStyle = reactive({ '--cursor-x':'-1000px','--cursor-y':'-1000px' });
+      const rotatingWords = ['Bloomind.', 'ensemble.', 'demain.']; const rotatingWordIndex = ref(0);
+      const animatedStats = reactive({ projects:0, votes:0, members:0 });
+      let wordTimer = null; let observer = null; let toastCounter = 0;
+
+      const emptyProjectForm = () => ({ name:'', idea:'', status:'IDEA', goal:'', impact:'', tagsText:'', rolesText:'' });
+      const projectForm = reactive(emptyProjectForm());
+      const joinForm = reactive({ role:'', message:'' });
+
+      const statusFilters = [
+        { value:'ALL', label:'Toutes' },{ value:'IDEA', label:'Idées' },{ value:'IN_PROGRESS', label:'En cours' },{ value:'COMPLETED', label:'Terminées' }
+      ];
+      const editableStatuses = [
+        { value:'IDEA', label:'Idée', help:'Encore au stade de l’intuition' },
+        { value:'IN_PROGRESS', label:'En cours', help:'Une équipe commence à avancer' },
+        { value:'COMPLETED', label:'Terminé', help:'Le projet a produit son résultat' },
+        { value:'ARCHIVED', label:'Archivé', help:'Mis en pause ou non retenu' },
+      ];
+      const mineTabs = [
+        { value:'created', label:'Mes idées' },{ value:'joined', label:'Mes participations' },{ value:'supported', label:'Mes soutiens' },{ value:'applications', label:'Mes demandes' }
+      ];
+
+      const currentUser = computed(() => users.find((u) => u.id === currentUserId.value) || users[0]);
+      const selectedProject = computed(() => projects.value.find((p) => p.id === selectedProjectId.value) || null);
+      const editingProject = computed(() => projects.value.find((p) => p.id === editingProjectId.value) || null);
+      const joiningProject = computed(() => projects.value.find((p) => p.id === joiningProjectId.value) || null);
+      const confirmDeleteProject = computed(() => projects.value.find((p) => p.id === confirmDeleteProjectId.value) || null);
+      const anyModalOpen = computed(() => Boolean(selectedProject.value || projectFormOpen.value || joinOpen.value || confirmDeleteProject.value || onboardingOpen.value));
+      const totalVotes = computed(() => projects.value.reduce((sum,p) => sum + p.votes.length, 0));
+      const totalMembers = computed(() => new Set(projects.value.flatMap((p) => p.memberIds)).size);
+      const openRolesCount = computed(() => projects.value.filter((p) => !['COMPLETED','ARCHIVED'].includes(p.status)).reduce((sum,p) => sum + p.roleNeeds.length,0));
+
+      const filteredProjects = computed(() => {
+        const needle = search.value.toLocaleLowerCase('fr');
+        const list = projects.value.filter((project) => {
+          if (statusFilter.value !== 'ALL' && project.status !== statusFilter.value) return false;
+          if (!needle) return true;
+          const owner = userById(project.ownerId);
+          return [project.name,project.idea,project.goal,project.impact,project.tags.join(' '),owner.name].filter(Boolean).join(' ').toLocaleLowerCase('fr').includes(needle);
+        });
+        return [...list].sort((a,b) => {
+          if (sortBy.value === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
+          if (sortBy.value === 'votes') return b.votes.length - a.votes.length;
+          const score = (p) => p.votes.length * 3 + p.memberIds.length * 2 + (p.status === 'IN_PROGRESS' ? 5 : 0) + (Date.now() - new Date(p.updatedAt)) / -86400000;
+          return score(b) - score(a);
+        });
+      });
+
+      const myFilteredProjects = computed(() => projects.value.filter((project) => {
+        if (mineTab.value === 'created') return project.ownerId === currentUserId.value;
+        if (mineTab.value === 'joined') return project.memberIds.includes(currentUserId.value) && project.ownerId !== currentUserId.value;
+        if (mineTab.value === 'supported') return project.votes.includes(currentUserId.value);
+        return project.applications.some((application) => application.userId === currentUserId.value);
+      }));
+
+      function userById(id) { return users.find((user) => user.id === id) || users[0]; }
+      function projectById(id) { return projects.value.find((project) => project.id === id) || null; }
+      function initials(name='') { return name.split(/\s+/).map((part) => part[0]).join('').slice(0,2).toUpperCase(); }
+      function avatarStyle(user) { return { '--avatar-bg':user?.avatarBg || '#ddd','--avatar-ink':user?.avatarInk || '#222' }; }
+      function statusLabel(status) { return ({IDEA:'Idée',IN_PROGRESS:'En cours',COMPLETED:'Terminé',ARCHIVED:'Archivé'}[status] || status); }
+      function roleLabel(user) { return user.globalRole === 'ADMIN' ? 'Administrateur · démo' : `${user.role} · démo`; }
+      function formatDate(value) { return new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',year:'numeric'}).format(new Date(value)); }
+      function filterCount(status) { return status === 'ALL' ? projects.value.length : projects.value.filter((p) => p.status === status).length; }
+      function mineCount(tab) {
+        return projects.value.filter((p) => tab === 'created' ? p.ownerId === currentUserId.value : tab === 'joined' ? p.memberIds.includes(currentUserId.value) && p.ownerId !== currentUserId.value : tab === 'supported' ? p.votes.includes(currentUserId.value) : p.applications.some((a) => a.userId === currentUserId.value)).length;
+      }
+      function canEdit(project) { return currentUser.value.globalRole === 'ADMIN' || project.ownerId === currentUserId.value || project.editorIds.includes(currentUserId.value); }
+      function canDelete(project) { return currentUser.value.globalRole === 'ADMIN' || project.ownerId === currentUserId.value; }
+      function canManageApplications(project) { return canEdit(project); }
+      function pendingApplications(project) { return project.applications.filter((application) => application.status === 'PENDING'); }
+      function activityIcon(type) { return ({vote:'heart',join:'users',create:'bulb',status:'rocket'}[type] || 'pulse'); }
+      function toastIcon(type) { return ({success:'check',love:'heart',info:'sparkles',danger:'trash'}[type] || 'sparkles'); }
+
+      function notify(title,message,type='success') {
+        const id = `toast-${++toastCounter}`;
+        toasts.value.push({id,title,message,type});
+        setTimeout(() => dismissToast(id), 4400);
+      }
+      function dismissToast(id) { toasts.value = toasts.value.filter((toast) => toast.id !== id); }
+      function burstConfetti(originX = 50, originY = 40, count = 36) {
+        if (!confettiLayer.value || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    
