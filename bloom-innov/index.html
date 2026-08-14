@@ -57,22 +57,40 @@
     </svg>
 
     <noscript>Bloom’innov nécessite JavaScript pour fonctionner.</noscript>
-  
+
+    <!-- Secours pour les navigateurs intégrés qui ne proposent pas encore DecompressionStream. -->
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako_inflate.min.js"></script>
     <script>
       (() => {
-        const readGzipBase64 = async (paths) => {
-          if (!('DecompressionStream' in window)) {
-            throw new Error('Ce navigateur ne prend pas en charge la décompression du build.');
+        const BUILD_VERSION = '20260814-2';
+
+        const decompressGzip = async (bytes) => {
+          if ('DecompressionStream' in window) {
+            try {
+              const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+              return await new Response(stream).text();
+            } catch (error) {
+              console.warn('[Bloom’innov] Décompression native indisponible, utilisation du mode compatible.', error);
+            }
           }
+
+          if (window.pako?.ungzip) {
+            return new TextDecoder('utf-8').decode(window.pako.ungzip(bytes));
+          }
+
+          throw new Error('Le navigateur intégré ne permet pas de charger ce build. Ouvre ce lien dans Safari, Chrome ou Firefox.');
+        };
+
+        const readGzipBase64 = async (paths) => {
           const parts = await Promise.all(paths.map(async (path) => {
-            const response = await fetch(path, { cache: 'force-cache' });
-            if (!response.ok) throw new Error(`Impossible de charger ${path}`);
+            const response = await fetch(`${path}?v=${BUILD_VERSION}`, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`Fichier manquant : ${path} (${response.status})`);
             return response.text();
           }));
-          const binary = atob(parts.join(''));
+          const cleanBase64 = parts.join('').replace(/\s+/g, '');
+          const binary = atob(cleanBase64);
           const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-          const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-          return new Response(stream).text();
+          return decompressGzip(bytes);
         };
 
         Promise.all([
@@ -92,6 +110,7 @@
             <main style="max-width:680px;margin:10vh auto;padding:32px;font:16px/1.5 system-ui;color:#173b32">
               <h1>Bloom’innov n’a pas pu démarrer</h1>
               <p>${error.message}</p>
+              <button type="button" onclick="window.location.reload()" style="border:0;border-radius:999px;padding:12px 18px;background:#173b32;color:white;font:inherit;font-weight:700">Réessayer</button>
             </main>`;
         });
       })();
