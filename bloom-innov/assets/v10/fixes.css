@@ -1,0 +1,165 @@
+/* Bloom’innov stability and responsive hotfix — 20260815-10 */
+html,body{max-width:100%;overflow-x:clip}
+main,.page,.hero-section,.project-grid,.activity-layout{min-width:0}
+
+/* Never let a route remain invisible if its IntersectionObserver was created too early. */
+.reveal{opacity:1!important;transform:none!important}
+.page-enter-active,.page-leave-active{transition:.22s var(--ease-out)!important}
+.page-enter-from{opacity:0;transform:translateY(10px)}
+.page-leave-to{opacity:0;transform:translateY(-6px)}
+
+/* The legacy profile popover is replaced by a root-level responsive profile sheet. */
+.profile-switcher .surface-popover{display:none!important}
+.bloom-profile-layer{position:fixed;inset:0;z-index:520;display:flex;align-items:flex-start;justify-content:flex-end;padding:calc(var(--topbar-height) + 12px) clamp(16px,4vw,64px) 20px;background:rgba(18,18,18,.22);backdrop-filter:blur(7px);animation:bloom-profile-fade .22s ease both}
+.bloom-profile-layer[hidden]{display:none}
+.bloom-profile-sheet{position:relative;width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - var(--topbar-height) - 32px);overflow:auto;overscroll-behavior:contain;padding:16px;border:1px solid rgba(23,23,23,.12);border-radius:28px;background:rgba(255,255,255,.96);box-shadow:0 28px 90px rgba(20,20,20,.25);animation:bloom-profile-in .32s var(--ease-out) both}
+.bloom-profile-grab{display:none;width:44px;height:4px;margin:0 auto 13px;border-radius:999px;background:rgba(23,23,23,.18)}
+.bloom-profile-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:4px 4px 15px;border-bottom:1px solid var(--line)}
+.bloom-profile-head .avatar{width:54px;height:54px;font-size:15px}
+.bloom-profile-head strong,.bloom-profile-head small{display:block}
+.bloom-profile-head strong{font-size:17px;letter-spacing:-.035em}
+.bloom-profile-head small{margin-top:3px;color:var(--muted);font-size:10px}
+.bloom-profile-close{width:38px;height:38px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;background:var(--canvas)}
+.bloom-profile-kicker{display:block;margin:18px 5px 9px;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.bloom-profile-users{display:grid;gap:6px}
+.bloom-profile-user{width:100%;min-width:0;padding:10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;border:1px solid transparent;border-radius:16px;background:transparent;text-align:left;transition:.2s var(--ease-out)}
+.bloom-profile-user:hover{background:var(--canvas)}
+.bloom-profile-user.is-active{border-color:var(--ink);background:var(--canvas);box-shadow:0 0 0 3px rgba(23,23,23,.04)}
+.bloom-profile-user strong,.bloom-profile-user small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bloom-profile-user strong{font-size:12px}
+.bloom-profile-user small{margin-top:2px;color:var(--muted);font-size:9px}
+.bloom-profile-user__role{padding:4px 7px;border-radius:999px;background:white;color:var(--muted);font-size:8px;font-weight:850}
+.bloom-profile-user.is-active .bloom-profile-user__role{color:var(--success)}
+.bloom-profile-actions{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:grid;gap:4px}
+.bloom-profile-action{width:100%;padding:11px 9px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;border:0;border-radius:14px;background:transparent;text-align:left}
+.bloom-profile-action:hover{background:var(--canvas)}
+.bloom-profile-action>span:first-child{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:color-mix(in srgb,var(--tertiary) 42%,white)}
+.bloom-profile-action:nth-child(2)>span:first-child{background:color-mix(in srgb,var(--sky) 35%,white)}
+.bloom-profile-action:nth-child(3)>span:first-child{background:color-mix(in srgb,var(--primary) 16%,white)}
+.bloom-profile-action strong,.bloom-profile-action small{display:block}
+.bloom-profile-action strong{font-size:11px}
+.bloom-profile-action small{margin-top:2px;color:var(--muted);font-size:9px}
+.bloom-profile-action>.icon{color:var(--muted)}
+@keyframes bloom-profile-fade{from{opacity:0}}
+@keyframes bloom-profile-in{from{opacity:0;transform:translateY(-12px) scale(.97)}}
+body.bloom-profile-open{overflow:hidden!important}
+
+/* Eliminate the navigation dead-zone between the old desktop and mobile breakpoints. */
+@media (min-width:821px) and (max-width:1180px){
+  .topbar{padding-inline:22px;gap:12px}
+  .desktop-nav{display:flex!important}
+  .desktop-nav button{padding:9px 12px}
+  .brand__company,.brand__separator,.brand__beta{display:none}
+  .profile-button__copy{display:none}
+  .topbar__actions{gap:7px}
+}
+
+@media (max-width:900px){
+  :root{--topbar-height:66px}
+  html{scroll-padding-bottom:94px}
+  body{padding-bottom:max(0px,env(safe-area-inset-bottom))}
+  main{padding-bottom:84px}
+  .desktop-nav{display:none!important}
+  .desktop-only{display:none!important}
+  .topbar{height:var(--topbar-height);padding:0 13px;gap:8px}
+  .brand__company,.brand__separator,.brand__beta{display:none}
+  .brand{gap:7px;min-width:0}
+  .brand__product{font-size:13px}
+  .topbar__actions .primary-button{display:none}
+  .profile-button{padding:0}
+  .page{padding-inline:16px}
+  .hero-section{min-height:auto;grid-template-columns:1fr;gap:8px;padding-block:48px 24px}
+  .hero-title{font-size:clamp(50px,14.5vw,82px);line-height:.91}
+  .hero-title__rotator{display:block;min-width:0;margin-inline-start:0}
+  .hero-lead{margin-top:25px;font-size:16px}
+  .hero-actions{align-items:flex-start;flex-direction:column;gap:12px;margin-top:27px}
+  .hero-orbit{width:min(86vw,470px);justify-self:center;margin-top:10px}
+  .brand-marquee{margin-top:8px;transform:none}
+  .pulse-strip{grid-template-columns:1fr;margin:50px 0 68px}
+  .pulse-strip article{min-height:108px;border-right:0;border-bottom:1px solid var(--line)}
+  .pulse-strip article:last-child{border-bottom:0}
+  .section-heading{align-items:flex-start;flex-direction:column}
+  .filter-panel{position:relative;top:auto;grid-template-columns:minmax(0,1fr);padding:9px;border-radius:18px}
+  .filter-chips{grid-column:auto;width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;scrollbar-width:none;overscroll-behavior-inline:contain}
+  .filter-chips::-webkit-scrollbar,.workspace-tabs::-webkit-scrollbar{display:none}
+  .filter-chips button{flex:0 0 auto}
+  .select-field{border-left:0;border-top:1px solid var(--line);padding-top:10px}
+  .project-grid{grid-template-columns:minmax(0,1fr)}
+  .project-card,.project-card:nth-child(n){grid-column:1!important;min-height:350px}
+  .project-card__body{padding-top:28px}
+  .closing-banner{grid-template-columns:1fr;margin-top:72px;border-radius:28px;padding:35px 24px}
+  .closing-banner__flower{opacity:.2}
+  .page--inner{padding-block:52px 120px}
+  .inner-hero{margin-bottom:38px}
+  .inner-hero h1{font-size:clamp(47px,13vw,76px);overflow-wrap:anywhere}
+  .activity-layout{grid-template-columns:minmax(0,1fr)}
+  .activity-aside{position:relative;top:auto}
+  .activity-item{padding:16px;gap:12px}
+  .mobile-nav{position:fixed;z-index:80;left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));height:64px;padding:5px 7px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;border:1px solid rgba(255,255,255,.1);border-radius:22px;color:white;background:rgba(20,20,20,.94);backdrop-filter:blur(18px);box-shadow:0 16px 45px rgba(0,0,0,.25)}
+  .mobile-nav button{min-width:0;border:0;display:grid;place-items:center;gap:3px;color:rgba(255,255,255,.55);background:none;font-size:8px}
+  .mobile-nav button.is-active{color:white}
+  .mobile-nav .icon{width:18px;height:18px}
+  .mobile-nav__create{width:50px;height:50px;margin:-18px auto 0;border-radius:50%!important;color:var(--ink)!important;background:var(--tertiary)!important;box-shadow:0 0 0 5px var(--ink),0 8px 20px rgba(0,0,0,.3)}
+  .project-drawer{height:100dvh;border-radius:0}
+  .project-drawer__content{grid-template-columns:minmax(0,1fr);padding-inline:16px}
+  .detail-bento,.detail-bento--wide{grid-column:1}
+  .role-grid{grid-template-columns:1fr}
+  .project-drawer__actions{padding-inline:16px;overflow-x:auto;scrollbar-width:none}
+  .project-drawer__actions::-webkit-scrollbar{display:none}
+  .project-drawer__actions .primary-button{white-space:nowrap}
+  .modal-layer{min-height:100dvh;padding:10px}
+  .form-modal,.join-modal,.confirm-modal{max-height:calc(100dvh - 20px)}
+  .join-modal{grid-template-columns:1fr}
+  .join-modal__visual{display:none}
+  .status-choice>div{grid-template-columns:1fr 1fr}
+  .optional-fields{grid-template-columns:1fr}
+  .form-modal__footer{align-items:stretch;flex-direction:column-reverse}
+  .form-modal__footer .primary-button{width:100%}
+  .onboarding{height:100dvh}
+  .onboarding-step{min-height:100dvh;max-height:100dvh;grid-template-columns:1fr;padding:95px 24px 125px;overflow:auto;overscroll-behavior:contain}
+  .onboarding-step__copy h1{font-size:clamp(46px,13vw,72px)}
+  .onboarding-step__visual{width:min(80vw,430px);margin-top:24px}
+  .onboarding__brand{left:20px;top:21px}
+  .onboarding__skip{right:17px;top:19px}
+  .onboarding__footer{left:20px;right:20px;bottom:0;padding:14px 0 max(10px,env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,var(--canvas) 30%)}
+  .onboarding__progress button{width:26px}
+  .onboarding-network__person{transform:translate(-50%,-50%) rotate(var(--angle)) translateY(-155px) rotate(calc(var(--angle)*-1))}
+  .onboarding-network__person .avatar{width:48px;height:48px}
+  .onboarding-users{grid-template-columns:1fr}
+  .toast-stack{bottom:90px}
+  .bloom-profile-layer{align-items:flex-end;justify-content:center;padding:12px 12px calc(82px + env(safe-area-inset-bottom));background:rgba(15,15,15,.42)}
+  .bloom-profile-sheet{width:100%;max-height:min(73dvh,680px);border-radius:26px;animation-name:bloom-profile-sheet-in}
+  .bloom-profile-grab{display:block}
+  @keyframes bloom-profile-sheet-in{from{opacity:0;transform:translateY(28px) scale(.98)}}
+}
+
+@media (max-width:600px){
+  .hero-title{font-size:clamp(47px,15vw,68px)}
+  .hero-title__accent::after{height:8px;bottom:-4px}
+  .hero-orbit{width:min(92vw,390px)}
+  .hero-orbit__card{max-width:145px;padding:9px 10px}
+  .hero-orbit__card small{display:none}
+  .project-card,.project-card:nth-child(n){min-height:325px;padding:20px;border-radius:23px}
+  .project-card h3{max-width:100%;font-size:clamp(27px,9vw,34px)}
+  .project-card__body p{-webkit-line-clamp:3}
+  .roles-need{display:none}
+  .closing-banner h2{font-size:clamp(34px,11vw,52px)}
+  .activity-item>button{display:none}
+  .project-drawer__hero{min-height:390px;padding-inline:23px}
+  .project-drawer__hero h2{font-size:clamp(42px,13vw,58px)}
+  .detail-bento{min-height:225px;padding:22px}
+}
+
+@media (max-width:380px){
+  .hero-title{font-size:45px}
+  .hero-orbit{width:300px}
+  .mobile-nav{left:5px;right:5px;padding-inline:4px}
+  .mobile-nav button{font-size:7px}
+  .status-choice>div{grid-template-columns:1fr}
+  .onboarding-step{padding-inline:18px}
+  .onboarding__footer{left:14px;right:14px}
+  .bloom-profile-sheet{padding:12px}
+}
+
+@media (hover:none){.project-card:hover{transform:none!important}}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important}.bloom-profile-layer,.bloom-profile-sheet{animation:none!important}}
