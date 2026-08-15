@@ -16,15 +16,21 @@
   </main>
   <script>
     (() => {
-      const VERSION = '20260814-8';
+      const VERSION = '20260815-10';
+      window.__BLOOM_REQUESTED_HASH__ = window.location.hash || '#/projects';
       const parts = ["./assets/v8/page-00.part", "./assets/v8/page-01.part", "./assets/v8/page-02.part", "./assets/v8/page-03.part", "./assets/v8/page-04.part", "./assets/v8/page-05.part", "./assets/v8/page-06.part", "./assets/v8/page-07.part", "./assets/v8/page-08.part", "./assets/v8/page-09.part", "./assets/v8/page-10.part", "./assets/v8/page-11.part", "./assets/v8/page-12.part", "./assets/v8/page-13.part", "./assets/v8/page-14.part", "./assets/v8/page-15.part", "./assets/v8/page-16.part", "./assets/v8/page-17.part", "./assets/v8/page-18.part"];
       Promise.all(parts.map(async (path) => {
         const response = await fetch(`${path}?v=${VERSION}`, { cache: 'no-store' });
         if (!response.ok) throw new Error(`Fichier manquant : ${path} (${response.status})`);
         return response.text();
       })).then((chunks) => {
+        const hotfixStyle = `<link rel="stylesheet" href="./assets/v10/fixes.css?v=${VERSION}" data-bloom-hotfix="${VERSION}" />`;
+        const hotfixScript = `<script src="./assets/v10/fixes.js?v=${VERSION}" data-bloom-hotfix="${VERSION}"><\/script>`;
+        const html = chunks.join('')
+          .replace('</head>', `${hotfixStyle}</head>`)
+          .replace('</body>', `${hotfixScript}</body>`);
         document.open();
-        document.write(chunks.join(''));
+        document.write(html);
         document.close();
       }).catch((error) => {
         console.error('[Bloom’innov bootstrap]', error);
